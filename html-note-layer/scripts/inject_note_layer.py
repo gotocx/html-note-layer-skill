@@ -85,6 +85,7 @@ RUNTIME = r"""
       }
       .hnl-note {
         position: absolute;
+        z-index: 4;
         min-width: 34px;
         max-width: 260px;
         min-height: 32px;
@@ -114,30 +115,42 @@ RUNTIME = r"""
       }
       .hnl-editor {
         position: absolute;
-        min-width: min(480px, calc(100vw - 32px));
+        z-index: 10;
+        width: clamp(220px, 38vw, 420px);
         max-width: calc(100vw - 32px);
-        padding: 12px;
+        padding: 7px;
         border: 1px solid rgba(58, 48, 34, .24);
-        border-radius: 16px;
+        border-radius: 18px;
         background:
           linear-gradient(145deg, rgba(212, 199, 178, .50), rgba(255, 243, 221, .56));
-        box-shadow: inset 7px 7px 14px rgba(80, 64, 42, .16), inset -7px -7px 14px rgba(255, 255, 255, .64);
-        backdrop-filter: blur(9px) saturate(1.2);
-        -webkit-backdrop-filter: blur(9px) saturate(1.2);
+        box-shadow: inset 6px 6px 13px rgba(80, 64, 42, .14), inset -6px -6px 13px rgba(255, 255, 255, .62), 0 10px 24px rgba(80, 64, 42, .12);
+        backdrop-filter: blur(13px) saturate(1.18);
+        -webkit-backdrop-filter: blur(13px) saturate(1.18);
       }
       .hnl-editor textarea {
         display: block;
+        box-sizing: border-box;
         width: 100%;
-        min-height: 72px;
-        resize: vertical;
+        min-height: 48px;
+        max-height: 132px;
+        resize: none;
+        overflow: auto;
         border: 0;
         outline: 0;
-        border-radius: 12px;
-        padding: 12px 13px;
-        background: rgba(255, 250, 240, .52);
+        border-radius: 13px;
+        padding: 10px 12px;
+        background: rgba(255, 250, 240, .42);
         color: #172125;
         font: 700 15px/1.45 ui-sans-serif, "Segoe UI", "Microsoft YaHei", sans-serif;
-        box-shadow: inset 5px 5px 11px rgba(80, 64, 42, .12), inset -5px -5px 11px rgba(255, 255, 255, .55);
+        box-shadow: inset 4px 4px 9px rgba(80, 64, 42, .11), inset -4px -4px 9px rgba(255, 255, 255, .50);
+      }
+      .hnl-editor textarea::-webkit-scrollbar {
+        width: 8px;
+      }
+      .hnl-editor textarea::-webkit-scrollbar-thumb {
+        border: 2px solid rgba(255, 250, 240, .62);
+        border-radius: 999px;
+        background: rgba(28, 95, 116, .72);
       }
       .hnl-copy-quote {
         position: absolute;
@@ -170,21 +183,25 @@ RUNTIME = r"""
         position: fixed;
         right: 22px;
         bottom: 22px;
-        width: 54px;
-        height: 54px;
+        z-index: 24;
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
         border: 1px solid rgba(58, 48, 34, .28);
         border-radius: 16px;
         background: linear-gradient(145deg, #fff7e8, #d8ccb6);
         color: #172125;
         box-shadow: 9px 9px 20px rgba(80, 64, 42, .18), -9px -9px 20px rgba(255, 255, 255, .72);
         cursor: pointer;
+        overflow: visible;
       }
       .hnl-fab-icon {
         display: block;
         position: relative;
         width: 22px;
         height: 22px;
-        margin: 15px auto 0;
+        margin: 0;
         border: 2px solid currentColor;
         border-radius: 4px;
       }
@@ -199,20 +216,22 @@ RUNTIME = r"""
       }
       .hnl-count {
         position: absolute;
-        right: -6px;
-        top: -6px;
-        min-width: 20px;
-        height: 20px;
+        right: -8px;
+        top: -8px;
+        min-width: 24px;
+        height: 24px;
         padding: 0 5px;
         border-radius: 999px;
         background: #1c5f74;
         color: #fff7e8;
-        font: 800 11px/20px ui-sans-serif, "Segoe UI", sans-serif;
+        font: 900 12px/24px ui-sans-serif, "Segoe UI", sans-serif;
+        box-shadow: 3px 3px 8px rgba(80, 64, 42, .18), -2px -2px 6px rgba(255, 255, 255, .64);
       }
       .hnl-panel {
         position: fixed;
         right: 22px;
         bottom: 88px;
+        z-index: 22;
         width: min(420px, calc(100vw - 32px));
         max-height: min(70vh, 680px);
         display: grid;
@@ -443,6 +462,44 @@ RUNTIME = r"""
     };
   }
 
+  function rectsOverlap(a, b) {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  }
+
+  function placeEditor(editor, point) {
+    const margin = 12;
+    const rect = editor.getBoundingClientRect();
+    const width = Math.min(rect.width || 360, window.innerWidth - margin * 2);
+    const height = Math.min(rect.height || 72, window.innerHeight - margin * 2);
+    const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - height - margin);
+    let left = clamp(point.x - Math.min(64, width * .18), margin, maxLeft);
+    let top = clamp(point.y, margin, maxTop);
+    const fabRect = fab.getBoundingClientRect();
+    const fabSafe = {
+      left: fabRect.left - 16,
+      top: fabRect.top - 16,
+      right: fabRect.right + 16,
+      bottom: fabRect.bottom + 16
+    };
+    const proposed = { left, top, right: left + width, bottom: top + height };
+    if (rectsOverlap(proposed, fabSafe)) {
+      const aboveFab = fabRect.top - height - 18;
+      if (aboveFab >= margin) {
+        top = Math.min(top, aboveFab);
+      } else {
+        left = Math.min(left, Math.max(margin, fabRect.left - width - 18));
+      }
+    }
+    editor.style.left = Math.round(left) + "px";
+    editor.style.top = Math.round(top) + "px";
+  }
+
+  function sizeEditorInput(area) {
+    area.style.height = "auto";
+    area.style.height = clamp(area.scrollHeight, 48, 132) + "px";
+  }
+
   function newId() {
     return "hnl-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
@@ -483,17 +540,20 @@ RUNTIME = r"""
 
   function openEditor(context) {
     finishActive();
+    panel.hidden = true;
     const note = context.note || createNote(context);
     const point = notePoint(note);
     const editor = document.createElement("div");
     editor.className = "hnl-editor";
     editor.dataset.noteId = note.id;
-    editor.style.left = clamp(point.x, 12, window.innerWidth - 32) + "px";
-    editor.style.top = clamp(point.y, 48, window.innerHeight - 90) + "px";
+    editor.style.left = "0px";
+    editor.style.top = "0px";
     editor.innerHTML = `${note.quote ? '<button class="hnl-copy-quote" type="button" aria-label="Copy selected text"></button>' : ""}<textarea aria-label="Note"></textarea>`;
     stage.appendChild(editor);
     const area = editor.querySelector("textarea");
     area.value = note.text || "";
+    sizeEditorInput(area);
+    placeEditor(editor, point);
     const copyQuote = editor.querySelector(".hnl-copy-quote");
     copyQuote?.addEventListener("click", (event) => {
       event.preventDefault();
@@ -505,6 +565,8 @@ RUNTIME = r"""
     area.addEventListener("input", () => {
       note.text = area.value;
       note.updatedAt = nowIso();
+      sizeEditorInput(area);
+      placeEditor(editor, notePoint(note));
       saveSoon();
     });
     active = { note, editor };
@@ -552,7 +614,8 @@ RUNTIME = r"""
   function renderNotes() {
     Array.from(stage.querySelectorAll(".hnl-note,.hnl-anchor")).forEach(el => el.remove());
     tetherSvg.innerHTML = "";
-    const saved = notes.filter(note => cleanText(note.text));
+    const activeId = active?.note?.id || "";
+    const saved = notes.filter(note => cleanText(note.text) && note.id !== activeId);
     for (const note of saved) {
       const point = notePoint(note);
       const anchor = document.createElement("div");
@@ -617,9 +680,12 @@ RUNTIME = r"""
   }, true);
   document.addEventListener("click", (event) => {
     if (Date.now() < suppressClickUntil) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
+      const activeText = active ? cleanText(active.editor.querySelector("textarea")?.value, 4000) : "";
+      if (!(activeText && !host.contains(event.target))) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
     }
     if (active && !host.contains(event.target)) finishActive();
   }, true);
@@ -705,17 +771,28 @@ RUNTIME = r"""
   function moveDrag(event) {
     if (!drag) return;
     event.preventDefault();
-    drag.note.dx = drag.startDx + event.clientX - drag.startX;
-    drag.note.dy = drag.startDy + event.clientY - drag.startY;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+    drag.note.dx = drag.startDx + deltaX;
+    drag.note.dy = drag.startDy + deltaY;
     drag.note.updatedAt = nowIso();
     drag.moved = true;
     renderNotes();
   }
 
-  function endDrag() {
+  function endDrag(event) {
     if (!drag) return;
-    suppressClickUntil = Date.now() + 250;
+    const finished = drag;
     drag = null;
+    if (!finished.moved) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      suppressClickUntil = Date.now() + 180;
+      openEditor({ note: finished.note });
+      return;
+    }
+    suppressClickUntil = Date.now() + 250;
     saveSoon();
   }
 

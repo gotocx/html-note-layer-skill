@@ -1,12 +1,12 @@
 ---
 name: html-note-layer
 description: Add a non-destructive local note layer to existing HTML files. Use when the user wants any old HTML report or page to support selecting text for notes, double-clicking anywhere for notes, dragging note anchors, preserving notes in localStorage, opening a floating notes panel, and copying or exporting notes without changing the original page content layer.
-version: 1.0.1
+version: 1.0.2
 ---
 
 # HTML Note Layer
 
-> **版本**: v1.0.1
+> **版本**: v1.0.2
 > **用途**: 给已有 HTML 注入独立阅读笔记层，保留原页面内容和布局。
 <!-- @类型: Skill 概览 -->
 <!-- @目的: 把选区笔记、任意位置笔记、拖拽、锚点、悬浮笔记面板和本地保存做成可复用 HTML 增强能力 -->
@@ -72,6 +72,7 @@ node scripts/smoke_note_layer.js <old.noted.html>
 - Single click should keep normal reading behavior; do not create notes on single click.
 - Text selection opens the selection editor and a separate floating copy button.
 - Double click opens a free-position note editor.
+- Clicking a saved note opens it for editing; the saved note chip should be hidden while its editor is active.
 - Clicking outside an editor commits a non-empty note and closes the active editor.
 - Empty editors should disappear without saving.
 - Saved notes should appear as movable anchors or glass-like note chips and remain after refresh.
@@ -92,5 +93,6 @@ node scripts/smoke_note_layer.js <old.noted.html>
 
 ## Version History
 
+- **v1.0.2** (2026-05-31) - Fixed saved-note editing state, active-note rendering, compact editor layout, and floating button sizing.
 - **v1.0.1** (2026-05-31) - Rewrote the instruction file in valid UTF-8 and documented selection-copy behavior.
 - **v1.0.0** (2026-05-31) - Initial reusable HTML note-layer injector with selection notes, free notes, dragging, floating panel, copy/export, localStorage persistence, and browser smoke validation.

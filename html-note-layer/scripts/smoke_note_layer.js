@@ -207,6 +207,29 @@ function pageSmoke() {
     await sleep(220);
     summary.savedAfterDoubleClick = root.querySelectorAll(".hnl-note").length;
 
+    const noteForEdit = root.querySelector(".hnl-note");
+    if (noteForEdit) {
+      const editId = noteForEdit.dataset.noteId;
+      const rect = noteForEdit.getBoundingClientRect();
+      noteForEdit.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerId: 2, clientX: rect.left + 8, clientY: rect.top + 8 }));
+      noteForEdit.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerId: 2, clientX: rect.left + 8, clientY: rect.top + 8 }));
+      await sleep(220);
+      const editBox = root.querySelector(".hnl-editor");
+      const editInput = editBox?.querySelector("textarea");
+      const editRect = editBox?.getBoundingClientRect();
+      summary.clickEditEditor = Boolean(editInput);
+      summary.activeNoteHiddenWhileEditing = !root.querySelector(`.hnl-note[data-note-id="${editId}"]`);
+      summary.editorWithinViewport = Boolean(editRect && editRect.left >= 0 && editRect.top >= 0 && editRect.right <= window.innerWidth && editRect.bottom <= window.innerHeight);
+      summary.editorCompact = Boolean(editRect && editRect.width <= 430 && editRect.height <= 170);
+      if (editInput) {
+        editInput.value = "selection note edited";
+        editInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      document.body.click();
+      await sleep(220);
+      summary.savedAfterEdit = root.querySelectorAll(".hnl-note").length;
+    }
+
     const note = root.querySelector(".hnl-note");
     if (note) {
       const rect = note.getBoundingClientRect();
@@ -218,6 +241,8 @@ function pageSmoke() {
     const key = Object.keys(localStorage).find((item) => item.startsWith("html-note-layer:v1:"));
     const stored = key ? localStorage.getItem(key) || "" : "";
     summary.dragPersisted = stored.includes("\"dx\"") && stored.includes("\"dy\"");
+    const fabRect = root.querySelector(".hnl-fab")?.getBoundingClientRect();
+    summary.fabSizeOk = Boolean(fabRect && fabRect.width >= 52 && fabRect.height >= 52);
 
     root.querySelector(".hnl-fab")?.click();
     await sleep(120);
@@ -247,9 +272,14 @@ function assertSmoke(summary, reloadSummary) {
   if (summary.selectionEditors !== 1 || !summary.selectionCopyButton) failures.push("text selection did not create editor with copy button");
   if (summary.savedSelectionNotes < 1) failures.push("selection note was not saved");
   if (!summary.doubleClickEditor || summary.savedAfterDoubleClick < 2) failures.push("double-click free note was not saved");
+  if (!summary.clickEditEditor) failures.push("saved note did not open an editor when activated");
+  if (!summary.activeNoteHiddenWhileEditing) failures.push("saved note chip remained visible while its editor was active");
+  if (!summary.editorWithinViewport || !summary.editorCompact) failures.push("note editor is not compact or within the viewport");
+  if (summary.savedAfterEdit < 2) failures.push("edited note was not saved");
   if (!summary.dragPersisted) failures.push("drag offset was not persisted");
+  if (!summary.fabSizeOk) failures.push("floating notes button was squeezed below usable size");
   if (!summary.panelOpen || summary.panelItems < 2) failures.push("floating notes panel did not show all notes");
-  if (!summary.exportText.includes("selection note") || !summary.exportText.includes("free note")) failures.push("export text missing notes");
+  if (!summary.exportText.includes("selection note edited") || !summary.exportText.includes("free note")) failures.push("export text missing notes");
   if (!summary.originalUnchanged) failures.push("original page text was modified");
   if (reloadSummary.savedAfterReload < 2 || reloadSummary.countText !== "2") failures.push("notes did not survive reload");
   if (failures.length) {
