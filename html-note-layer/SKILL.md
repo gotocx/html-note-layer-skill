@@ -1,12 +1,12 @@
 ---
 name: html-note-layer
 description: Add a non-destructive local note layer to existing HTML files. Use when the user wants any old HTML report or page to support selecting text for notes, double-clicking anywhere for notes, dragging note anchors, preserving notes in localStorage, opening a floating notes panel, and copying or exporting notes without changing the original page content layer.
-version: 1.0.2
+version: 1.0.3
 ---
 
 # HTML Note Layer
 
-> **版本**: v1.0.2
+> **版本**: v1.0.3
 > **用途**: 给已有 HTML 注入独立阅读笔记层，保留原页面内容和布局。
 <!-- @类型: Skill 概览 -->
 <!-- @目的: 把选区笔记、任意位置笔记、拖拽、锚点、悬浮笔记面板和本地保存做成可复用 HTML 增强能力 -->
@@ -27,45 +27,49 @@ Use this skill when an existing `.html` file needs local reading notes without r
 - Provide a selection copy button near the selected text. It must be visually separate from the note editor and should copy only the selected text.
 - Provide two export modes: `1. <note>` and `Original: <quote or anchor>\nNote: <note>`.
 
-## Workflow: Inject Local HTML Note Layer
+## @工作流: Inject Local HTML Note Layer
 <!-- @类型: 标准操作流程(SOP) -->
 <!-- @目的: 给旧 HTML 生成一个不破坏原内容层的可记笔记副本 -->
 <!-- @场景: 用户提供旧 HTML，希望选中文字、双击任意位置、拖拽锚点、查看和复制所有笔记 -->
+<!-- @优先级: 必须 -->
 <!-- @验证点: 生成的 HTML 支持选区笔记、任意位置笔记、悬浮面板、复制、拖拽和刷新持久化 -->
 <!-- @验证方式: `node scripts/smoke_note_layer.js <output.html>` 输出 NOTE_LAYER_SMOKE_OK -->
 
-### Step 1: Create A Noted Copy
+### @步骤1: Create A Noted Copy
 <!-- @类型: 操作步骤 -->
+<!-- @优先级: 必须 -->
 <!-- @验证点: 原 HTML 不被覆盖，输出文件包含 html-note-layer runtime -->
 <!-- @验证方式: 输出路径存在，且源文件内容未变 -->
 
-- Action: generate `<name>.noted.html` by default.
-- Action: use `--in-place` only when the user explicitly asks to overwrite the original HTML.
-- Action: if the target file already contains this note layer, use `--force` to replace the old runtime.
+- @动作: generate `<name>.noted.html` by default.
+- @动作: use `--in-place` only when the user explicitly asks to overwrite the original HTML.
+- @动作: if the target file already contains this note layer, use `--force` to replace the old runtime.
 
 ```bash
 python scripts/inject_note_layer.py <old.html> --output <old.noted.html>
 ```
 
-### Step 2: Browser Regression
+### @步骤2: Browser Regression
 <!-- @类型: 操作步骤 -->
+<!-- @优先级: 必须 -->
 <!-- @验证点: 选区笔记、双击笔记、拖拽、浮动面板、导出和刷新恢复都可用 -->
 <!-- @验证方式: smoke 脚本返回 NOTE_LAYER_SMOKE_OK -->
 
-- Action: open the injected HTML with a real browser regression script, not only static string checks.
+- @动作: open the injected HTML with a real browser regression script, not only static string checks.
 
 ```bash
 node scripts/smoke_note_layer.js <old.noted.html>
 ```
 
-### Step 3: Deliver The Output Path
+### @步骤3: Deliver The Output Path
 <!-- @类型: 操作步骤 -->
+<!-- @优先级: 必须 -->
 <!-- @验证点: 用户拿到可打开的 HTML 路径，并知道笔记保存位置 -->
 <!-- @验证方式: 最终回答包含输出 HTML 路径和验证结果 -->
 
-- Action: return the generated HTML path.
-- Action: state that notes are saved in this browser's localStorage for that generated file.
-- Action: state that copying and exporting notes are available from the floating notes panel.
+- @动作: return the generated HTML path.
+- @动作: state that notes are saved in this browser's localStorage for that generated file.
+- @动作: state that copying and exporting notes are available from the floating notes panel.
 
 ## Behavior Rules
 
@@ -93,6 +97,7 @@ node scripts/smoke_note_layer.js <old.noted.html>
 
 ## Version History
 
+- **v1.0.3** (2026-05-31) - Added kz-skill-creator semantic workflow, step, metadata, and action markers for strict package validation.
 - **v1.0.2** (2026-05-31) - Fixed saved-note editing state, active-note rendering, compact editor layout, and floating button sizing.
 - **v1.0.1** (2026-05-31) - Rewrote the instruction file in valid UTF-8 and documented selection-copy behavior.
 - **v1.0.0** (2026-05-31) - Initial reusable HTML note-layer injector with selection notes, free notes, dragging, floating panel, copy/export, localStorage persistence, and browser smoke validation.
