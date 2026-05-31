@@ -244,6 +244,20 @@ function pageSmoke() {
     const fabRect = root.querySelector(".hnl-fab")?.getBoundingClientRect();
     summary.fabSizeOk = Boolean(fabRect && fabRect.width >= 52 && fabRect.height >= 52);
 
+    const scroller = document.scrollingElement || document.documentElement;
+    const originalScrollTop = scroller.scrollTop;
+    if (scroller.scrollHeight > window.innerHeight + 320) {
+      window.scrollTo(0, scroller.scrollHeight);
+      await sleep(320);
+      const stackedAtTop = Array.from(root.querySelectorAll(".hnl-note")).filter((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.top <= 12 && rect.bottom > 0;
+      });
+      summary.offscreenNotesDoNotStackAtTop = stackedAtTop.length === 0;
+      window.scrollTo(0, originalScrollTop);
+      await sleep(320);
+    }
+
     root.querySelector(".hnl-fab")?.click();
     await sleep(120);
     summary.panelOpen = !root.querySelector(".hnl-panel")?.hidden;
@@ -278,6 +292,7 @@ function assertSmoke(summary, reloadSummary) {
   if (summary.savedAfterEdit < 2) failures.push("edited note was not saved");
   if (!summary.dragPersisted) failures.push("drag offset was not persisted");
   if (!summary.fabSizeOk) failures.push("floating notes button was squeezed below usable size");
+  if (summary.offscreenNotesDoNotStackAtTop === false) failures.push("offscreen notes stacked at the top during scroll");
   if (!summary.panelOpen || summary.panelItems < 2) failures.push("floating notes panel did not show all notes");
   if (!summary.exportText.includes("selection note edited") || !summary.exportText.includes("free note")) failures.push("export text missing notes");
   if (!summary.originalUnchanged) failures.push("original page text was modified");

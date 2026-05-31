@@ -1,12 +1,12 @@
 ---
 name: html-note-layer
 description: Add a non-destructive local note layer to existing HTML files. Use when the user wants any old HTML report or page to support selecting text for notes, double-clicking anywhere for notes, dragging note anchors, preserving notes in localStorage, opening a floating notes panel, and copying or exporting notes without changing the original page content layer.
-version: 1.0.3
+version: 1.0.4
 ---
 
 # HTML Note Layer
 
-> **版本**: v1.0.3
+> **版本**: v1.0.4
 > **用途**: 给已有 HTML 注入独立阅读笔记层，保留原页面内容和布局。
 <!-- @类型: Skill 概览 -->
 <!-- @目的: 把选区笔记、任意位置笔记、拖拽、锚点、悬浮笔记面板和本地保存做成可复用 HTML 增强能力 -->
@@ -80,6 +80,7 @@ node scripts/smoke_note_layer.js <old.noted.html>
 - Clicking outside an editor commits a non-empty note and closes the active editor.
 - Empty editors should disappear without saving.
 - Saved notes should appear as movable anchors or glass-like note chips and remain after refresh.
+- Saved note chips should render only while their source anchor is near the viewport; offscreen notes must not clamp into a top or bottom stack during scroll.
 - Dragging a saved note should update only note-layer coordinates, never original page content.
 - The note layer must be reversible by removing the injected block between `html-note-layer:start` and `html-note-layer:end`.
 
@@ -97,6 +98,7 @@ node scripts/smoke_note_layer.js <old.noted.html>
 
 ## Version History
 
+- **v1.0.4** (2026-05-31) - Fixed scroll behavior so offscreen anchored notes hide instead of stacking at viewport edges.
 - **v1.0.3** (2026-05-31) - Added kz-skill-creator semantic workflow, step, metadata, and action markers for strict package validation.
 - **v1.0.2** (2026-05-31) - Fixed saved-note editing state, active-note rendering, compact editor layout, and floating button sizing.
 - **v1.0.1** (2026-05-31) - Rewrote the instruction file in valid UTF-8 and documented selection-copy behavior.

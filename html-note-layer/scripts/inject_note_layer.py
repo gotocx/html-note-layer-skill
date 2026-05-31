@@ -462,6 +462,15 @@ RUNTIME = r"""
     };
   }
 
+  function noteAnchorIsNearViewport(point) {
+    const marginY = 36;
+    const marginX = 160;
+    return point.anchorY >= -marginY &&
+      point.anchorY <= window.innerHeight + marginY &&
+      point.anchorX >= -marginX &&
+      point.anchorX <= window.innerWidth + marginX;
+  }
+
   function rectsOverlap(a, b) {
     return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
   }
@@ -618,6 +627,7 @@ RUNTIME = r"""
     const saved = notes.filter(note => cleanText(note.text) && note.id !== activeId);
     for (const note of saved) {
       const point = notePoint(note);
+      if (!noteAnchorIsNearViewport(point)) continue;
       const anchor = document.createElement("div");
       anchor.className = "hnl-anchor";
       anchor.style.left = point.anchorX + "px";
@@ -628,7 +638,7 @@ RUNTIME = r"""
       view.className = "hnl-note";
       view.dataset.noteId = note.id;
       view.style.left = clamp(point.x, 8, window.innerWidth - 42) + "px";
-      view.style.top = clamp(point.y, 8, window.innerHeight - 42) + "px";
+      view.style.top = clamp(point.y, -120, window.innerHeight + 40) + "px";
       view.innerHTML = `${escapeHtml(cleanText(note.text, 80))}<small>${escapeHtml(note.quote || "page anchor")}</small>`;
       stage.appendChild(view);
 
